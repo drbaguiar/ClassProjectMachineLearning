@@ -1,0 +1,94 @@
+---
+title: "Class Project Machine Learning"
+author: "Dr. B"
+date: "Friday, December 12, 2014"
+output: html_document
+---
+
+```{r setup,warning=FALSE,message=FALSE}
+##Clear the environment
+rm(list=ls())
+
+##Turn off scientific notations for numbers
+options(scipen = 999)  
+
+##Set locale
+Sys.setlocale("LC_ALL", "English") 
+
+##Load libraries
+call <- function(x)
+{
+        if (!require(x,character.only = TRUE))
+        {
+                install.packages(x,dep=TRUE)
+        }
+}
+
+call("caret")
+call("randomForest")
+
+##Set seed for reproducibility
+set.seed(2345)
+
+##Set location of Data DOIrectory
+datadir=('C:/Users/bryan_000/Documents/GitHub/Data/')
+```
+
+##Introduction
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. 
+
+(More information is available from the website [here](http://groupware.les.inf.puc-rio.br/har). (see the section on the Weight Lifting Exercise Dataset)). 
+
+###Load the Data
+The data for this project come from this [source](http://groupware.les.inf.puc-rio.br/har). The training data for this project were downloaded from [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv).  The test data were downloaded from [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv). 
+
+
+```{r load}
+#Set name of training and testing datafiles
+train.data=paste(datadir,"pml-training.csv",sep = "")
+test.data=paste(datadir,"pml-testing.csv",sep = "")
+train.url="http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+test.url="http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+
+##Check for training file, download if not there
+if (!file.exists(train.data)) {
+  download.file(train.url, destfile = train.data)
+}
+
+##Check for testing file, download if not there
+if (!file.exists(test.data)) {
+  download.file(test.url, destfile = test.data)
+}
+
+##Read the data
+test <- read.csv(test.data, sep = ",", na.strings = c("", "NA"))
+train <- read.csv(train.data, sep = ",", na.strings = c("", "NA"))
+
+##Clean out variables not used
+rm(test.data)
+rm(train.data)
+rm(test.url)
+rm(train.url)
+rm(datadir)
+```
+
+###Clean the Data
+Once the data were loaded, the next step was to clean it by removing columns full of NAs and removing features that were not in the test set. Because the test dataset had no time-dependence, these values were disregarded from the training dataset. The first 7 features were removed because they were related to the time-series or were not numeric.
+
+```{r clean}
+##Clean the data
+names(test) <- tolower(names(test))
+names(test) <- gsub("_","",names(test))
+names(train) <- tolower(names(train))
+names(train) <- gsub("_","",names(train))
+
+##Remove columns full of NAs. Only use features used in test dataset.
+features <- names(test[,colSums(is.na(test)) == 0])[8:59]
+train.df <- train[,c(features,"classe")]
+test.df <- test[,c(features,"problemid")]
+
+##clean out unused datasets
+rm(test)
+rm(train)
+```
