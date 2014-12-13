@@ -1,5 +1,5 @@
 ---
-title: "Class Project Machine Learning"
+title: "Class Project - Machine Learning"
 author: "Dr. B"
 date: "Friday, December 12, 2014"
 output: html_document
@@ -26,6 +26,7 @@ call <- function(x)
 
 call("caret")
 call("randomForest")
+call("knitr")
 
 ##Set seed for reproducibility
 set.seed(2345)
@@ -35,21 +36,25 @@ datadir=('C:/Users/bryan_000/Documents/GitHub/Data/')
 ```
 
 ##Introduction
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
 
-Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. 
+In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of six young health participants.  The participnts were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: 
+        exactly according to the specification (Class A)
+        throwing the elbows to the front (Class B)
+        lifting the dumbbell only halfway (Class C)
+        lowering the dumbbell only halfway (Class D)
+        throwing the hips to the front (Class E)
 
 (More information is available from the website [here](http://groupware.les.inf.puc-rio.br/har). (see the section on the Weight Lifting Exercise Dataset)). 
 
 ###Load the Data
 The data for this project come from this [source](http://groupware.les.inf.puc-rio.br/har). The training data for this project were downloaded from [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv).  The test data were downloaded from [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv). 
-
-
 ```{r load}
-#Set name of training and testing datafiles
+#Set name of training and validating datafiles
 train.data=paste(datadir,"pml-training.csv",sep = "")
-test.data=paste(datadir,"pml-testing.csv",sep = "")
+validate.data=paste(datadir,"pml-testing.csv",sep = "")
 train.url="http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-test.url="http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+validate.url="http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 
 ##Check for training file, download if not there
 if (!file.exists(train.data)) {
@@ -57,38 +62,181 @@ if (!file.exists(train.data)) {
 }
 
 ##Check for testing file, download if not there
-if (!file.exists(test.data)) {
-  download.file(test.url, destfile = test.data)
+if (!file.exists(validate.data)) {
+  download.file(validate.url, destfile = validate.data)
 }
 
 ##Read the data
-test <- read.csv(test.data, sep = ",", na.strings = c("", "NA"))
+validate <- read.csv(validate.data, sep = ",", na.strings = c("", "NA"))
 train <- read.csv(train.data, sep = ",", na.strings = c("", "NA"))
 
 ##Clean out variables not used
-rm(test.data)
+rm(validate.data)
 rm(train.data)
-rm(test.url)
+rm(validate.url)
 rm(train.url)
-rm(datadir)
 ```
 
 ###Clean the Data
-Once the data were loaded, the next step was to clean it by removing columns full of NAs and removing features that were not in the test set. Because the test dataset had no time-dependence, these values were disregarded from the training dataset. The first 7 features were removed because they were related to the time-series or were not numeric.
+The training dataset contains `r nrow(train)` observations with `r length(train)` variables.  The validation dataset contains `r nrow(validate)` observations with `r length(validate)` variables.  The variable that will be predicted is classe.  Classe is as follows `r summary(train$classe)`
 
+Once the data were loaded, the next step was to clean it. There are 100 columns with almost all missing values. Columns full of NAs were removed as were variables that were not in the test set. Because the test dataset had no time-dependence, these values were disregarded from the training dataset. In order to look only at the variables related to movement, the first seven variables were removed.
 ```{r clean}
-##Clean the data
-names(test) <- tolower(names(test))
-names(test) <- gsub("_","",names(test))
+##Clean the column names 
+names(validate) <- tolower(names(validate))
+names(validate) <- gsub("_","",names(validate))
 names(train) <- tolower(names(train))
 names(train) <- gsub("_","",names(train))
 
-##Remove columns full of NAs. Only use features used in test dataset.
-features <- names(test[,colSums(is.na(test)) == 0])[8:59]
-train.df <- train[,c(features,"classe")]
-test.df <- test[,c(features,"problemid")]
+##Remove columns full of NAs. Only use variables in test dataset.
+vars <- names(validate[,colSums(is.na(validate)) == 0])[8:59]
+train.df <- train[,c(vars,"classe")]
+validate.df <- validate[,c(vars,"problemid")]
 
 ##clean out unused datasets
-rm(test)
+rm(validate)
 rm(train)
+```
+
+After cleaning, the training dataset contained `r nrow(train.df)` observations with `r length(train.df)` variables.  The validation dataset contained `r nrow(validate.df)` observations with `r length(validate.df)` variables.  
+
+###Data Partition
+Next, the training dataset was split to withhold 20% of the dataset for testing after the final model is constructed.
+```{r split}
+##Split the training dataset
+inTrain <- createDataPartition(train.df$classe, p = 0.80, list = FALSE)
+training <- train.df[inTrain,]
+testing <- train.df[-inTrain,]
+validate <- validate.df
+
+##clean out unused datasets
+rm(inTrain)
+rm(train.df)
+rm(validate.df)
+```
+
+###Variables
+Some predictor variables may be highly correlated. The find correlations function was used to identify correlations (positive or negative) greater than .90.  
+```{r correlate}
+outcome = which(names(training) == "classe")
+highcorrcols = findCorrelation(abs(cor(training[,-outcome])),0.90)
+highcorrvars = names(training)[highcorrcols]
+training = training[,-highcorrcols]
+outcome = which(names(training) == "classe")
+```
+
+The variables with high correlation were `r highcorrvars[1:length(highcorrvars)-1]`, and `r highcorrvars[length(highcorrvars)]`.  These variables were then removed from the dataset, leaving `r length(training)` variables.
+
+##Data Mining
+
+###Random Forest
+A random forest was used to discover the most important variables. The random forest method reduces overfitting and is good for nonlinear variables. 
+```{r randomf}
+fsRF = randomForest(training[,-outcome], training[,outcome], importance = T)
+rfImp = data.frame(fsRF$importance)
+impFeatures = order(-rfImp$MeanDecreaseGini)
+inImp = createDataPartition(training$classe, p = 0.05, list = F)
+```
+
+The feature plot for the 4 most important variables:
+```{r plotrf}
+featurePlot(training[inImp,impFeatures[1:4]],training$classe[inImp], plot = "pairs")
+```
+
+The most important features are:
+        `r names(training)[1]`
+        `r names(training)[2]`
+        `r names(training)[3]`
+        `r names(training)[4]`
+        
+##Training
+Training was accomplished using the k-nearest neighbors, decision tree, and random forest for comparison.
+```{r traindata}
+##Set the training control
+##knn <- trainControl(method = "adaptive_cv",number = 5, allowParallel = TRUE, verboseIter = TRUE)
+##dt <- trainControl(method = "cv", number = 5, allowParallel = TRUE, verboseIter = TRUE)
+##rf <- trainControl(method = "oob",number = 5, allowParallel = TRUE, verboseIter = TRUE)
+ctrl <- trainControl(method = "cv", number = 5, allowParallel = TRUE, verboseIter = TRUE)
+
+
+##k-nearest neighbors
+modelknn <- train(classe ~ ., training, method = "knn", trControl = ctrl)
+resultsknn <- data.frame(modelknn$results)
+
+##Decision Tree
+modeldt<- train(classe~., training, method="ctree", trControl = ctrl)
+resultsdt <- data.frame(modeldt$results)
+
+##Random Forest
+modelrf <- train(classe ~ ., training, method = "rf", ntree = 200, trControl = ctrl)
+resultsrf <- data.frame(modelrf$results)
+```
+
+###Confusion Matrix
+confusion matrices between the k-nearest neighbors, decision tree, and random forest models were used to see how much they agree on the test set.  
+```{r confusionmatrix}
+##Fit the models to the test dataset
+fitknn = predict(modelknn, testing)
+fitrf = predict(modelrf, testing)
+fitdt <-predict(modeldt, testing)
+
+##Compare fits
+confusionMatrix(fitrf, fitknn)
+confusionMatrix(fitrf, fitdt)
+confusionMatrix(fitknn, fitdt)
+
+##Compare knn to test dataset
+confusionMatrix(fitknn, testing$classe)
+
+##Compare rf to test dataset
+confusionMatrix(fitrf, testing$classe)
+
+##Compare dt to test dataset
+confusionMatrix(fitdt, testing$classe)
+
+```
+
+###Accuracy
+The random forest fit is more accurate than the k-nearest neighbors or the decision tree (89% accuracy) methods as shown below:
+```{r accuracytable}
+accuracy.table <- data.frame(Model=c("Random Forest", "Decision Tree", "KNN"),
+                        Accuracy=c(round(max(head(resultsrf)$Accuracy), 2),
+                                   round(max(head(resultsdt)$Accuracy), 2),
+                                   round(max(head(resultsknn)$Accuracy), 2)))
+kable(accuracy.table)
+```
+
+##Predictions
+Predications were made using the k-nearest neighbors, decision tree, and random forest models.  
+```{r}
+##Do the predictions
+pred.1 <- predict(modelknn, validate)
+pred.2 <- predict(modeldt, validate)
+pred.3 <- predict(modelrf, validate)
+
+##Make a table and check if they all agree
+pred.df <- data.frame(rf.pred = pred.3, dt.pred = pred.2, knn.pred = pred.3)
+pred.df$agree <- with(pred.df, rf.pred == dt.pred && rf.pred == knn.pred)
+all.agree <- all(pred.df$agree)
+colnames(pred.df) <- c("RF", "DT", "KNN", "All Agree?")
+kable(pred.df)
+```
+
+##Submission
+The random forest model was used to preduct the 20 cases submitted to Coursera.
+```{r submit}
+answers <- pred.df$RF
+  pml_write_files = function(x){
+    n = length(x)
+    for(i in 1:n){
+      filename = paste0(datadir,"problem_id_",i,".txt")
+      write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+    }
+  }
+pml_write_files(answers)
+
+ans = data.frame(problem.id = 1:20,answers = answers)
+x <- as.matrix(format(ans))
+rownames(x) <- rep("", nrow(x))
+print(x, quote=FALSE, right=TRUE)
 ```
