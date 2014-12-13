@@ -61,7 +61,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <pre class="r"><code>##Clear the environment
 rm(list=ls())
 
-##Turn off scientific notations for numbers
+##Turn off scientific notations for numbers becuase I hate it
 options(scipen = 999)  
 
 ##Set locale
@@ -83,12 +83,12 @@ call(&quot;knitr&quot;)
 ##Set seed for reproducibility
 set.seed(2345)
 
-##Set location of Data DOIrectory
+##Set location of Data Directory
 datadir=('C:/Users/bryan_000/Documents/GitHub/Data/')</code></pre>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it.</p>
-<p>In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of six young health participants. The participnts were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A) throwing the elbows to the front (Class B) lifting the dumbbell only halfway (Class C) lowering the dumbbell only halfway (Class D) throwing the hips to the front (Class E)</p>
+<p>In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of six young health participants. The participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A) throwing the elbows to the front (Class B) lifting the dumbbell only halfway (Class C) lowering the dumbbell only halfway (Class D) throwing the hips to the front (Class E)</p>
 <p>(More information is available from the website <a href="http://groupware.les.inf.puc-rio.br/har">here</a>. (see the section on the Weight Lifting Exercise Dataset)).</p>
 <div id="load-the-data" class="section level3">
 <h3>Load the Data</h3>
@@ -183,48 +183,11 @@ inImp = createDataPartition(training$classe, p = 0.05, list = F)</code></pre>
 <h2>Training</h2>
 <p>Training was accomplished using the k-nearest neighbors, decision tree, and random forest for comparison.</p>
 <pre class="r"><code>##Set the training control
-##knn &lt;- trainControl(method = &quot;adaptive_cv&quot;,number = 5, allowParallel = TRUE, verboseIter = TRUE)
-##dt &lt;- trainControl(method = &quot;cv&quot;, number = 5, allowParallel = TRUE, verboseIter = TRUE)
-##rf &lt;- trainControl(method = &quot;oob&quot;,number = 5, allowParallel = TRUE, verboseIter = TRUE)
-ctrl &lt;- trainControl(method = &quot;cv&quot;, number = 5, allowParallel = TRUE, verboseIter = TRUE)
-
+ctrl &lt;- trainControl(method = &quot;cv&quot;, number = 5, allowParallel = TRUE)
 
 ##k-nearest neighbors
-modelknn &lt;- train(classe ~ ., training, method = &quot;knn&quot;, trControl = ctrl)</code></pre>
-<pre><code>## + Fold1: k=5 
-## - Fold1: k=5 
-## + Fold1: k=7 
-## - Fold1: k=7 
-## + Fold1: k=9 
-## - Fold1: k=9 
-## + Fold2: k=5 
-## - Fold2: k=5 
-## + Fold2: k=7 
-## - Fold2: k=7 
-## + Fold2: k=9 
-## - Fold2: k=9 
-## + Fold3: k=5 
-## - Fold3: k=5 
-## + Fold3: k=7 
-## - Fold3: k=7 
-## + Fold3: k=9 
-## - Fold3: k=9 
-## + Fold4: k=5 
-## - Fold4: k=5 
-## + Fold4: k=7 
-## - Fold4: k=7 
-## + Fold4: k=9 
-## - Fold4: k=9 
-## + Fold5: k=5 
-## - Fold5: k=5 
-## + Fold5: k=7 
-## - Fold5: k=7 
-## + Fold5: k=9 
-## - Fold5: k=9 
-## Aggregating results
-## Selecting tuning parameters
-## Fitting k = 5 on full training set</code></pre>
-<pre class="r"><code>resultsknn &lt;- data.frame(modelknn$results)
+modelknn &lt;- train(classe ~ ., training, method = &quot;knn&quot;, trControl = ctrl)
+resultsknn &lt;- data.frame(modelknn$results)
 
 ##Decision Tree
 modeldt&lt;- train(classe~., training, method=&quot;ctree&quot;, trControl = ctrl)</code></pre>
@@ -247,77 +210,11 @@ modeldt&lt;- train(classe~., training, method=&quot;ctree&quot;, trControl = ctr
 <pre><code>## Loading required package: modeltools</code></pre>
 <pre><code>## Warning: package 'modeltools' was built under R version 3.1.1</code></pre>
 <pre><code>## Loading required package: stats4</code></pre>
-<pre><code>## + Fold1: mincriterion=0.99 
-## - Fold1: mincriterion=0.99 
-## + Fold1: mincriterion=0.50 
-## - Fold1: mincriterion=0.50 
-## + Fold1: mincriterion=0.01 
-## - Fold1: mincriterion=0.01 
-## + Fold2: mincriterion=0.99 
-## - Fold2: mincriterion=0.99 
-## + Fold2: mincriterion=0.50 
-## - Fold2: mincriterion=0.50 
-## + Fold2: mincriterion=0.01 
-## - Fold2: mincriterion=0.01 
-## + Fold3: mincriterion=0.99 
-## - Fold3: mincriterion=0.99 
-## + Fold3: mincriterion=0.50 
-## - Fold3: mincriterion=0.50 
-## + Fold3: mincriterion=0.01 
-## - Fold3: mincriterion=0.01 
-## + Fold4: mincriterion=0.99 
-## - Fold4: mincriterion=0.99 
-## + Fold4: mincriterion=0.50 
-## - Fold4: mincriterion=0.50 
-## + Fold4: mincriterion=0.01 
-## - Fold4: mincriterion=0.01 
-## + Fold5: mincriterion=0.99 
-## - Fold5: mincriterion=0.99 
-## + Fold5: mincriterion=0.50 
-## - Fold5: mincriterion=0.50 
-## + Fold5: mincriterion=0.01 
-## - Fold5: mincriterion=0.01 
-## Aggregating results
-## Selecting tuning parameters
-## Fitting mincriterion = 0.01 on full training set</code></pre>
 <pre class="r"><code>resultsdt &lt;- data.frame(modeldt$results)
 
 ##Random Forest
-modelrf &lt;- train(classe ~ ., training, method = &quot;rf&quot;, ntree = 200, trControl = ctrl)</code></pre>
-<pre><code>## + Fold1: mtry= 2 
-## - Fold1: mtry= 2 
-## + Fold1: mtry=24 
-## - Fold1: mtry=24 
-## + Fold1: mtry=47 
-## - Fold1: mtry=47 
-## + Fold2: mtry= 2 
-## - Fold2: mtry= 2 
-## + Fold2: mtry=24 
-## - Fold2: mtry=24 
-## + Fold2: mtry=47 
-## - Fold2: mtry=47 
-## + Fold3: mtry= 2 
-## - Fold3: mtry= 2 
-## + Fold3: mtry=24 
-## - Fold3: mtry=24 
-## + Fold3: mtry=47 
-## - Fold3: mtry=47 
-## + Fold4: mtry= 2 
-## - Fold4: mtry= 2 
-## + Fold4: mtry=24 
-## - Fold4: mtry=24 
-## + Fold4: mtry=47 
-## - Fold4: mtry=47 
-## + Fold5: mtry= 2 
-## - Fold5: mtry= 2 
-## + Fold5: mtry=24 
-## - Fold5: mtry=24 
-## + Fold5: mtry=47 
-## - Fold5: mtry=47 
-## Aggregating results
-## Selecting tuning parameters
-## Fitting mtry = 24 on full training set</code></pre>
-<pre class="r"><code>resultsrf &lt;- data.frame(modelrf$results)</code></pre>
+modelrf &lt;- train(classe ~ ., training, method = &quot;rf&quot;, ntree = 200, trControl = ctrl)
+resultsrf &lt;- data.frame(modelrf$results)</code></pre>
 <div id="confusion-matrix" class="section level3">
 <h3>Confusion Matrix</h3>
 <p>confusion matrices between the k-nearest neighbors, decision tree, and random forest models were used to see how much they agree on the test set.</p>
@@ -557,17 +454,15 @@ kable(accuracy.table)</code></pre>
 </div>
 <div id="predictions" class="section level2">
 <h2>Predictions</h2>
-<p>Predications were made using the k-nearest neighbors, decision tree, and random forest models.</p>
+<p>Predictions were made using the k-nearest neighbors, decision tree, and random forest models.</p>
 <pre class="r"><code>##Do the predictions
 pred.1 &lt;- predict(modelknn, validate)
 pred.2 &lt;- predict(modeldt, validate)
 pred.3 &lt;- predict(modelrf, validate)
 
 ##Make a table and check if they all agree
-pred.df &lt;- data.frame(rf.pred = pred.3, dt.pred = pred.2, knn.pred = pred.3)
-pred.df$agree &lt;- with(pred.df, rf.pred == dt.pred &amp;&amp; rf.pred == knn.pred)
-all.agree &lt;- all(pred.df$agree)
-colnames(pred.df) &lt;- c(&quot;RF&quot;, &quot;DT&quot;, &quot;KNN&quot;, &quot;All Agree?&quot;)
+pred.df &lt;- data.frame(rf.pred = pred.3, dt.pred = pred.2, knn.pred = pred.1)
+colnames(pred.df) &lt;- c(&quot;RF&quot;, &quot;DT&quot;, &quot;KNN&quot;)
 kable(pred.df)</code></pre>
 <table>
 <thead>
@@ -575,7 +470,6 @@ kable(pred.df)</code></pre>
 <th align="left">RF</th>
 <th align="left">DT</th>
 <th align="left">KNN</th>
-<th align="left">All Agree?</th>
 </tr>
 </thead>
 <tbody>
@@ -583,128 +477,108 @@ kable(pred.df)</code></pre>
 <td align="left">B</td>
 <td align="left">B</td>
 <td align="left">B</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">A</td>
 <td align="left">A</td>
 <td align="left">A</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td align="left">B</td>
 <td align="left">A</td>
 <td align="left">B</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">A</td>
 <td align="left">A</td>
 <td align="left">A</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td align="left">A</td>
 <td align="left">A</td>
 <td align="left">A</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">E</td>
 <td align="left">E</td>
 <td align="left">E</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td align="left">D</td>
 <td align="left">D</td>
 <td align="left">D</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">B</td>
 <td align="left">B</td>
 <td align="left">B</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td align="left">A</td>
 <td align="left">A</td>
 <td align="left">A</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">A</td>
 <td align="left">A</td>
 <td align="left">A</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td align="left">B</td>
 <td align="left">C</td>
 <td align="left">B</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">C</td>
 <td align="left">C</td>
 <td align="left">C</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td align="left">B</td>
 <td align="left">B</td>
-<td align="left">B</td>
-<td align="left">TRUE</td>
+<td align="left">D</td>
 </tr>
 <tr class="even">
 <td align="left">A</td>
 <td align="left">A</td>
 <td align="left">A</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td align="left">E</td>
 <td align="left">E</td>
 <td align="left">E</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">E</td>
 <td align="left">E</td>
 <td align="left">E</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td align="left">A</td>
 <td align="left">A</td>
 <td align="left">A</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">B</td>
 <td align="left">B</td>
 <td align="left">B</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td align="left">B</td>
 <td align="left">B</td>
 <td align="left">B</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">B</td>
 <td align="left">B</td>
 <td align="left">B</td>
-<td align="left">TRUE</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div id="submission" class="section level2">
 <h2>Submission</h2>
-<p>The random forest model was used to preduct the 20 cases submitted to Coursera.</p>
+<p>The random forest model was used to predict the 20 cases submitted to Coursera.</p>
 <pre class="r"><code>answers &lt;- pred.df$RF
   pml_write_files = function(x){
     n = length(x)
@@ -740,6 +614,7 @@ print(x, quote=FALSE, right=TRUE)</code></pre>
 ##          18       B
 ##          19       B
 ##          20       B</code></pre>
+<p>All predictions were recorded as correct.</p>
 </div>
 
 

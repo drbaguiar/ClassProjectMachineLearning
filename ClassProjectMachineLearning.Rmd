@@ -4,12 +4,11 @@ author: "Dr. B"
 date: "Friday, December 12, 2014"
 output: html_document
 ---
-
 ```{r setup,warning=FALSE,message=FALSE}
 ##Clear the environment
 rm(list=ls())
 
-##Turn off scientific notations for numbers
+##Turn off scientific notations for numbers becuase I hate it
 options(scipen = 999)  
 
 ##Set locale
@@ -31,14 +30,14 @@ call("knitr")
 ##Set seed for reproducibility
 set.seed(2345)
 
-##Set location of Data DOIrectory
+##Set location of Data Directory
 datadir=('C:/Users/bryan_000/Documents/GitHub/Data/')
 ```
 
 ##Introduction
 Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
 
-In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of six young health participants.  The participnts were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: 
+In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of six young health participants.  The participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: 
         exactly according to the specification (Class A)
         throwing the elbows to the front (Class B)
         lifting the dumbbell only halfway (Class C)
@@ -153,11 +152,7 @@ The most important features are:
 Training was accomplished using the k-nearest neighbors, decision tree, and random forest for comparison.
 ```{r traindata}
 ##Set the training control
-##knn <- trainControl(method = "adaptive_cv",number = 5, allowParallel = TRUE, verboseIter = TRUE)
-##dt <- trainControl(method = "cv", number = 5, allowParallel = TRUE, verboseIter = TRUE)
-##rf <- trainControl(method = "oob",number = 5, allowParallel = TRUE, verboseIter = TRUE)
-ctrl <- trainControl(method = "cv", number = 5, allowParallel = TRUE, verboseIter = TRUE)
-
+ctrl <- trainControl(method = "cv", number = 5, allowParallel = TRUE)
 
 ##k-nearest neighbors
 modelknn <- train(classe ~ ., training, method = "knn", trControl = ctrl)
@@ -193,7 +188,6 @@ confusionMatrix(fitrf, testing$classe)
 
 ##Compare dt to test dataset
 confusionMatrix(fitdt, testing$classe)
-
 ```
 
 ###Accuracy
@@ -207,7 +201,7 @@ kable(accuracy.table)
 ```
 
 ##Predictions
-Predications were made using the k-nearest neighbors, decision tree, and random forest models.  
+Predictions were made using the k-nearest neighbors, decision tree, and random forest models.  
 ```{r}
 ##Do the predictions
 pred.1 <- predict(modelknn, validate)
@@ -215,15 +209,13 @@ pred.2 <- predict(modeldt, validate)
 pred.3 <- predict(modelrf, validate)
 
 ##Make a table and check if they all agree
-pred.df <- data.frame(rf.pred = pred.3, dt.pred = pred.2, knn.pred = pred.3)
-pred.df$agree <- with(pred.df, rf.pred == dt.pred && rf.pred == knn.pred)
-all.agree <- all(pred.df$agree)
-colnames(pred.df) <- c("RF", "DT", "KNN", "All Agree?")
+pred.df <- data.frame(rf.pred = pred.3, dt.pred = pred.2, knn.pred = pred.1)
+colnames(pred.df) <- c("RF", "DT", "KNN")
 kable(pred.df)
 ```
 
 ##Submission
-The random forest model was used to preduct the 20 cases submitted to Coursera.
+The random forest model was used to predict the 20 cases submitted to Coursera.
 ```{r submit}
 answers <- pred.df$RF
   pml_write_files = function(x){
@@ -240,3 +232,4 @@ x <- as.matrix(format(ans))
 rownames(x) <- rep("", nrow(x))
 print(x, quote=FALSE, right=TRUE)
 ```
+All predictions were recorded as correct.
